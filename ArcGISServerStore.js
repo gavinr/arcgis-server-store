@@ -503,7 +503,9 @@ define([
 			for (var key in object) {
 				if (object.hasOwnProperty(key)) {
 					value = object[key];
-					if (value instanceof RegExp && typeof value.toString === 'function') {
+					if (value === 'null') {
+						clauses.push(key + ' IS NULL');
+					} else if (value instanceof RegExp && typeof value.toString === 'function') {
 						var value = value.toString();
 
 						// Replace JavaScript special characters with SQL special characters
