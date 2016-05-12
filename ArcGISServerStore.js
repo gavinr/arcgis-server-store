@@ -131,9 +131,6 @@ define([
 		 * @return {Object}
 		 */
 		get: function(id) {
-			if (this._serviceInfo.templates ? !this.capabilities.Query : !this.capabilities.Data) {
-				throw new Error('Get not supported.');
-			} else {
 				var query = new Query();
 				query.outFields = this.outFields;
 				query.returnGeometry = this.returnGeometry;
@@ -158,7 +155,6 @@ define([
 						return undefined;
 					}
 				}));
-			}
 		},
 		/**
 		 * Return an object's identity
@@ -181,14 +177,13 @@ define([
 				var dfd = new Deferred();
 				when(options.overwrite || this.get(id)).then(lang.hitch(this, function(existing) {
 					if (existing) {
-						if (this.capabilities.Update) {
 							object = this._unflatten(lang.clone(object));
 							lang.setObject('attributes.' + this.idProperty, id, object);
 							esriRequest({
-								url: this.url + '/updateFeatures',
+								url: this.url + '/applyEdits',
 								content: {
 									f: 'json',
-									features: JSON.stringify([object])
+									updates: JSON.stringify([object])
 								},
 								handleAs: 'json',
 								callbackParamName: 'callback'
@@ -199,9 +194,6 @@ define([
 									dfd.resolve(response.updateResults[0].success ? response.updateResults[0].objectId : undefined);
 								}
 							}, dfd.reject);
-						} else {
-							dfd.reject(new Error('Update not supported.'));
-						}
 					} else {
 						when(this.add(object, options)).then(dfd.resolve, dfd.reject);
 					}
@@ -231,10 +223,10 @@ define([
 				}
 
 				return esriRequest({
-					url: this.url + '/addFeatures',
+					url: this.url + '/applyEdits',
 					content: {
 						f: 'json',
-						features: JSON.stringify([clone])
+						adds: JSON.stringify([clone])
 					},
 					handleAs: 'json',
 					callbackParamName: 'callback'
